@@ -31,6 +31,10 @@ def get_post_html(post):
         html = f.read()
     dt = datetime.utcfromtimestamp(post.created_utc)
     html = html.replace("<!--title-->", post.title)
+    html = html.replace("<!--subreddit-->", f"/r/{str(post.subreddit)}")
+    html = html.replace("<!--user-->", f"/u/{post.author.name}" if post.author else "[deleted]")
+    html = html.replace("<!--link-->", f"https://reddit.com{post.permalink}")
+    html = html.replace("<!--body-->", post.selftext_html or "")
     html = html.replace("<!--timestamp-->", str(dt))
     html = html.replace("<!--date-->", dt.strftime("%d %B, %Y"))
     return html
