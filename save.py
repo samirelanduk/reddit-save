@@ -19,17 +19,24 @@ if not os.path.isdir(location):
 # Make a client object
 client = make_client()
 
+if mode == "saved":
+    html_file = "saved.html"
+    get_posts = get_saved_posts
+else:
+    html_file = "upvoted.html"
+    get_posts = get_upvoted_posts
+
 posts_html = []
 
-for post in get_saved_posts(client):
+for post in get_posts(client):
     posts_html.append(get_post_html(post))
 
-with open(os.path.join("html", "saved.html")) as f:
+with open(os.path.join("html", html_file)) as f:
     html = f.read()
 
 html = html.replace("<!--posts-->", "\n".join(posts_html))
 
-with open(os.path.join(location, "saved.html"), "w") as f:
+with open(os.path.join(location, html_file), "w") as f:
     f.write(html)
 
 

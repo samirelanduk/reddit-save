@@ -20,6 +20,12 @@ def get_saved_posts(client):
             yield saved
 
 
+def get_upvoted_posts(client):
+    for upvoted in client.user.me().upvoted(limit=None):
+        if upvoted.__class__.__name__ == "Submission":
+            yield upvoted
+
+
 def get_post_html(post):
     with open(os.path.join("html", "post.html")) as f:
         html = f.read()
