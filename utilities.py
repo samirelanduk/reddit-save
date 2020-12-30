@@ -34,6 +34,7 @@ def get_post_html(post):
     html = html.replace("<!--subreddit-->", f"/r/{str(post.subreddit)}")
     html = html.replace("<!--user-->", f"/u/{post.author.name}" if post.author else "[deleted]")
     html = html.replace("<!--link-->", f"https://reddit.com{post.permalink}")
+    html = html.replace("<!--content-link-->", post.url)
     html = html.replace("<!--body-->", post.selftext_html or "")
     html = html.replace("<!--timestamp-->", str(dt))
     html = html.replace("<!--date-->", dt.strftime("%d %B, %Y"))
