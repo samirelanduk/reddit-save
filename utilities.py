@@ -15,7 +15,7 @@ def make_client():
 
 
 def get_saved_posts(client):
-    for saved in client.user.me().saved(limit=None):
+    for saved in client.user.me().saved(limit=10):
         if saved.__class__.__name__ == "Submission":
             yield saved
 
