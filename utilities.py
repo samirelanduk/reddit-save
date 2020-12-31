@@ -4,12 +4,12 @@ import requests
 import youtube_dl
 import re
 from datetime import datetime
-from secrets2 import REDDIT_USERNAME, REDDIT_PASSWORD
-from secrets2 import REDDIT_CLIENT_ID, REDDIT_SECRET
+from secrets import REDDIT_USERNAME, REDDIT_PASSWORD
+from secrets import REDDIT_CLIENT_ID, REDDIT_SECRET
 
-IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "gif"]
+IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "gifv"]
 VIDEO_EXTENSIONS = ["mp4"]
-PLATFORMS = ["redgifs.com", "gfycat.com"]
+PLATFORMS = ["redgifs.com", "gfycat.com", "imgur.com"]
 
 def make_client():
     return praw.Reddit(
@@ -23,7 +23,7 @@ def make_client():
 
 def get_saved_posts(client):
     return [
-        saved for saved in client.user.me().saved(limit=10)
+        saved for saved in client.user.me().saved(limit=None)
         if saved.__class__.__name__ == "Submission"
     ]
 
@@ -52,15 +52,15 @@ def get_post_html(post):
 
 def save_media(post, location):
     media_extensions = IMAGE_EXTENSIONS + VIDEO_EXTENSIONS
-    extension = post.url.split(".")[-1].lower()
+    extension = post.url.split("?")[0].split(".")[-1].lower()
     readable_name = list(filter(bool, post.permalink.split("/")))[-1]
-    if extension in media_extensions:
+    domain = ".".join(post.url.split("/")[2].split(".")[-2:])
+    if extension in media_extensions and not (extension == "gifv" and domain == "imgur.com"):
         filename = f"{readable_name}_{post.id}.{extension}"
         with open(os.path.join(location, "media", filename), "wb") as f:
             f.write(requests.get(post.url).content)
             return filename
     else:
-        domain = ".".join(post.url.split("/")[2].split(".")[-2:])
         if domain in PLATFORMS:
             url = post.url
             if domain == "gfycat.com":
@@ -74,12 +74,15 @@ def save_media(post, location):
                     else: return None
             options = {
                 "nocheckcertificate": True, "quiet": True, "no_warnings": True,
+                "ignoreerrors": True,
                 "outtmpl": os.path.join(
                     location, "media",  f"{readable_name}_{post.id}" + ".%(ext)s"
                 )
             }
             with youtube_dl.YoutubeDL(options) as ydl:
-                ydl.download([url])
+                try:
+                    ydl.download([url])
+                except: pass
             for f in os.listdir(os.path.join(location, "media")):
                 if f.startswith(f"{readable_name}_{post.id}"):
                     return f
@@ -100,3 +103,4 @@ def add_media_preview_to_html(post_html, media):
             "<!--preview-->",
             f'<video controls><source src="{location}"></video>'
         )
+    return post_html
