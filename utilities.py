@@ -1,12 +1,14 @@
 import os
 import praw
 import requests
+import youtube_dl
 from datetime import datetime
 from secrets import REDDIT_USERNAME, REDDIT_PASSWORD
 from secrets import REDDIT_CLIENT_ID, REDDIT_SECRET
 
 IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "gif"]
 VIDEO_EXTENSIONS = ["mp4"]
+PLATFORMS = ["redgifs.com"]
 
 def make_client():
     return praw.Reddit(
@@ -19,7 +21,7 @@ def make_client():
 
 
 def get_saved_posts(client):
-    for saved in client.user.me().saved(limit=None):
+    for saved in client.user.me().saved(limit=10):
         if saved.__class__.__name__ == "Submission":
             yield saved
 
@@ -45,24 +47,43 @@ def get_post_html(post):
     return html
 
 
-def get_post_media(post):
+def save_media(post, location):
     media_extensions = IMAGE_EXTENSIONS + VIDEO_EXTENSIONS
     extension = post.url.split(".")[-1].lower()
     readable_name = list(filter(bool, post.permalink.split("/")))[-1]
     if extension in media_extensions:
-        return {
-            "name": f"{readable_name}_{post.id}.{extension}",
-            "content": requests.get(post.url).content
-        }
+        filename = f"{readable_name}_{post.id}.{extension}"
+        with open(os.path.join(location, "media", filename), "wb") as f:
+            f.write(requests.get(post.url).content)
+            return filename
+    else:
+        domain = ".".join(post.url.split("/")[2].split(".")[-2:])
+        if domain in PLATFORMS:
+            options = {
+                "nocheckcertificate": True, "quiet": True, "no_warnings": True,
+                "outtmpl": os.path.join(
+                    location, "media",  f"{readable_name}_{post.id}" + ".%(ext)s"
+                )
+            }
+            with youtube_dl.YoutubeDL(options) as ydl:
+                ydl.download([post.url])
+            for f in os.listdir(os.path.join(location, "media")):
+                if f.startswith(f"{readable_name}_{post.id}"):
+                    return f
 
         # gyfcat, v.reddit, imgur, redgifs
 
 
 def add_media_preview_to_html(post_html, media):
-    extension = media["name"].split(".")[-1]
-    location = "/".join(["media", media["name"]])
+    extension = media.split(".")[-1]
+    location = "/".join(["media", media])
     if extension in IMAGE_EXTENSIONS:
         return post_html.replace(
             "<!--preview-->",
             f'<img src="{location}">'
+        )
+    if extension in VIDEO_EXTENSIONS:
+        return post_html.replace(
+            "<!--preview-->",
+            f'<video controls><source src="{location}"></video>'
         )

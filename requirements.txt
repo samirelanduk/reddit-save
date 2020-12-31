@@ -1,2 +1,3 @@
 praw
 requests
+youtube_dl

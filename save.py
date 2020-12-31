@@ -35,10 +35,8 @@ posts_html = []
 
 for post in get_posts(client):
     post_html = get_post_html(post)
-    media = get_post_media(post)
+    media = save_media(post, location)
     if media:
-        with open(os.path.join(location, "media", media["name"]), "wb") as f:
-            f.write(media["content"])
         post_html = add_media_preview_to_html(post_html, media)
     posts_html.append(post_html)
 
