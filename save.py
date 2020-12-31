@@ -2,6 +2,7 @@
 
 import argparse
 import os
+from tqdm import tqdm
 from utilities import *
 
 # Get arguments
@@ -33,7 +34,8 @@ if not os.path.exists(os.path.join(location, "media")):
 
 posts_html = []
 
-for post in get_posts(client):
+posts = get_posts(client)
+for post in tqdm(posts):
     post_html = get_post_html(post)
     media = save_media(post, location)
     if media:

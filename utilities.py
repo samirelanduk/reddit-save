@@ -2,13 +2,14 @@ import os
 import praw
 import requests
 import youtube_dl
+import re
 from datetime import datetime
-from secrets import REDDIT_USERNAME, REDDIT_PASSWORD
-from secrets import REDDIT_CLIENT_ID, REDDIT_SECRET
+from secrets2 import REDDIT_USERNAME, REDDIT_PASSWORD
+from secrets2 import REDDIT_CLIENT_ID, REDDIT_SECRET
 
 IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "gif"]
 VIDEO_EXTENSIONS = ["mp4"]
-PLATFORMS = ["redgifs.com"]
+PLATFORMS = ["redgifs.com", "gfycat.com"]
 
 def make_client():
     return praw.Reddit(
@@ -21,15 +22,17 @@ def make_client():
 
 
 def get_saved_posts(client):
-    for saved in client.user.me().saved(limit=10):
-        if saved.__class__.__name__ == "Submission":
-            yield saved
+    return [
+        saved for saved in client.user.me().saved(limit=10)
+        if saved.__class__.__name__ == "Submission"
+    ]
 
 
 def get_upvoted_posts(client):
-    for upvoted in client.user.me().upvoted(limit=None):
-        if upvoted.__class__.__name__ == "Submission":
-            yield upvoted
+    return [
+        upvoted for upvoted in client.user.me().upvoted(limit=None)
+        if saved.__class__.__name__ == "Submission"
+    ]
 
 
 def get_post_html(post):
@@ -59,6 +62,16 @@ def save_media(post, location):
     else:
         domain = ".".join(post.url.split("/")[2].split(".")[-2:])
         if domain in PLATFORMS:
+            url = post.url
+            if domain == "gfycat.com":
+                html = requests.get(post.url).content
+                if len(html) < 50000:
+                    match = re.search(
+                        r"http([\dA-Za-z\+\:\/\.]+)\.mp4", html.decode()
+                    )
+                    if match:
+                        url = match.group()
+                    else: return None
             options = {
                 "nocheckcertificate": True, "quiet": True, "no_warnings": True,
                 "outtmpl": os.path.join(
@@ -66,7 +79,7 @@ def save_media(post, location):
                 )
             }
             with youtube_dl.YoutubeDL(options) as ydl:
-                ydl.download([post.url])
+                ydl.download([url])
             for f in os.listdir(os.path.join(location, "media")):
                 if f.startswith(f"{readable_name}_{post.id}"):
                     return f

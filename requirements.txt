@@ -1,3 +1,4 @@
 praw
 requests
 youtube_dl
+tqdm
