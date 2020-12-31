@@ -3,3 +3,4 @@ __pycache__
 .DS_Store
 samirelanduk
 secrets.py
+secrets2.py

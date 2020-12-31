@@ -1,8 +1,12 @@
 import os
 import praw
+import requests
 from datetime import datetime
 from secrets import REDDIT_USERNAME, REDDIT_PASSWORD
 from secrets import REDDIT_CLIENT_ID, REDDIT_SECRET
+
+IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "gif"]
+VIDEO_EXTENSIONS = ["mp4"]
 
 def make_client():
     return praw.Reddit(
@@ -15,7 +19,7 @@ def make_client():
 
 
 def get_saved_posts(client):
-    for saved in client.user.me().saved(limit=10):
+    for saved in client.user.me().saved(limit=None):
         if saved.__class__.__name__ == "Submission":
             yield saved
 
@@ -39,3 +43,26 @@ def get_post_html(post):
     html = html.replace("<!--timestamp-->", str(dt))
     html = html.replace("<!--date-->", dt.strftime("%d %B, %Y"))
     return html
+
+
+def get_post_media(post):
+    media_extensions = IMAGE_EXTENSIONS + VIDEO_EXTENSIONS
+    extension = post.url.split(".")[-1].lower()
+    readable_name = list(filter(bool, post.permalink.split("/")))[-1]
+    if extension in media_extensions:
+        return {
+            "name": f"{readable_name}_{post.id}.{extension}",
+            "content": requests.get(post.url).content
+        }
+
+        # gyfcat, v.reddit, imgur, redgifs
+
+
+def add_media_preview_to_html(post_html, media):
+    extension = media["name"].split(".")[-1]
+    location = "/".join(["media", media["name"]])
+    if extension in IMAGE_EXTENSIONS:
+        return post_html.replace(
+            "<!--preview-->",
+            f'<img src="{location}">'
+        )
