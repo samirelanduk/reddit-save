@@ -1,6 +1,7 @@
 import os
 import praw
 import requests
+from redvid import Downloader
 import youtube_dl
 import re
 from datetime import datetime
@@ -9,9 +10,11 @@ from secrets import REDDIT_CLIENT_ID, REDDIT_SECRET
 
 IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "gifv"]
 VIDEO_EXTENSIONS = ["mp4"]
-PLATFORMS = ["redgifs.com", "gfycat.com", "imgur.com"]
+PLATFORMS = ["redgifs.com", "gfycat.com", "imgur.com", "youtube.com"]
 
 def make_client():
+    """Creates a PRAW client with the details in the secrets.py file."""
+
     return praw.Reddit(
         username=REDDIT_USERNAME,
         password=REDDIT_PASSWORD,
@@ -22,13 +25,17 @@ def make_client():
 
 
 def get_saved_posts(client):
+    """Gets a list of posts that the user has saved."""
+
     return [
-        saved for saved in client.user.me().saved(limit=None)
+        saved for saved in client.user.me().saved(limit=20)
         if saved.__class__.__name__ == "Submission"
     ]
 
 
 def get_upvoted_posts(client):
+    """Gets a list of posts that the user has saved."""
+
     return [
         upvoted for upvoted in client.user.me().upvoted(limit=None)
         if saved.__class__.__name__ == "Submission"
@@ -36,6 +43,9 @@ def get_upvoted_posts(client):
 
 
 def get_post_html(post):
+    """Takes a post object and creates a HTML for it - but not including the
+    preview HTML."""
+
     with open(os.path.join("html", "post.html")) as f:
         html = f.read()
     dt = datetime.utcfromtimestamp(post.created_utc)
@@ -51,46 +61,69 @@ def get_post_html(post):
 
 
 def save_media(post, location):
-    media_extensions = IMAGE_EXTENSIONS + VIDEO_EXTENSIONS
-    extension = post.url.split("?")[0].split(".")[-1].lower()
-    readable_name = list(filter(bool, post.permalink.split("/")))[-1]
+    """Takes a post object and tries to download any image/video it might be
+    associated with. If it can, it will return the filename."""
+
+    url = post.url
+    stripped_url = url.split("?")[0]
+    if url.endswith(post.permalink): return
+
+    # What is the key information?
+    extension = stripped_url.split(".")[-1].lower()
     domain = ".".join(post.url.split("/")[2].split(".")[-2:])
-    if extension in media_extensions and not (extension == "gifv" and domain == "imgur.com"):
+    readable_name = list(filter(bool, post.permalink.split("/")))[-1]
+
+    # Can the media be obtained directly?
+    if extension in IMAGE_EXTENSIONS + VIDEO_EXTENSIONS:
         filename = f"{readable_name}_{post.id}.{extension}"
         with open(os.path.join(location, "media", filename), "wb") as f:
-            f.write(requests.get(post.url).content)
-            return filename
-    else:
-        if domain in PLATFORMS:
-            url = post.url
-            if domain == "gfycat.com":
-                html = requests.get(post.url).content
-                if len(html) < 50000:
-                    match = re.search(
-                        r"http([\dA-Za-z\+\:\/\.]+)\.mp4", html.decode()
-                    )
-                    if match:
-                        url = match.group()
-                    else: return None
-            options = {
-                "nocheckcertificate": True, "quiet": True, "no_warnings": True,
-                "ignoreerrors": True,
-                "outtmpl": os.path.join(
-                    location, "media",  f"{readable_name}_{post.id}" + ".%(ext)s"
-                )
-            }
-            with youtube_dl.YoutubeDL(options) as ydl:
-                try:
-                    ydl.download([url])
-                except: pass
-            for f in os.listdir(os.path.join(location, "media")):
-                if f.startswith(f"{readable_name}_{post.id}"):
-                    return f
+            response = requests.get(post.url)
+            media_type = response.headers.get("Content-Type", "")
+            if media_type.startswith("image") or media_type.startswith("video"):
+                f.write(response.content)
+                return filename
+    
+    # Is this a v.redd.it link?
+    if domain == "redd.it":
+        downloader = Downloader(max_q=True, log=False)
+        downloader.url = url
+        name = downloader.download()
+        extension = name.split(".")[-1]
+        filename = f"{readable_name}_{post.id}.{extension}"
+        os.rename(name, os.path.join(location, "media", filename))
+        return filename
 
-        # gyfcat, v.reddit, imgur, redgifs
+    # Is it a gfycat link that redirects? Update the URL if possible
+    if domain == "gfycat.com":
+        html = requests.get(post.url).content
+        if len(html) < 50000:
+            match = re.search(r"http([\dA-Za-z\+\:\/\.]+)\.mp4", html.decode())
+            if match:
+                url = match.group()
+            else: return None
+    
+    # Try to use youtube_dl if it's one of the possible domains
+    if domain in PLATFORMS:
+        options = {
+            "nocheckcertificate": True, "quiet": True, "no_warnings": True,
+            "ignoreerrors": True,
+            "outtmpl": os.path.join(
+                location, "media",  f"{readable_name}_{post.id}" + ".%(ext)s"
+            )
+        }
+        with youtube_dl.YoutubeDL(options) as ydl:
+            try:
+                ydl.download([url])
+            except: pass
+        for f in os.listdir(os.path.join(location, "media")):
+            if f.startswith(f"{readable_name}_{post.id}"):
+                return f
 
 
 def add_media_preview_to_html(post_html, media):
+    """Takes post HTML and returns a modified version with the preview
+    inserted."""
+    
     extension = media.split(".")[-1]
     location = "/".join(["media", media])
     if extension in IMAGE_EXTENSIONS:
