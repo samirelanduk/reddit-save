@@ -28,7 +28,7 @@ def get_saved_posts(client):
     """Gets a list of posts that the user has saved."""
 
     return [
-        saved for saved in client.user.me().saved(limit=20)
+        saved for saved in client.user.me().saved(limit=None)
         if saved.__class__.__name__ == "Submission"
     ]
 
@@ -101,6 +101,17 @@ def save_media(post, location):
             if match:
                 url = match.group()
             else: return None
+
+    # Is this an imgur image?
+    if domain =="imgur.com":
+        for extension in IMAGE_EXTENSIONS:
+            direct_url = f'https://i.{url[url.find("//") + 2:]}.{extension}'
+            response = requests.get(direct_url)
+            if response.status_code == 200:
+                filename = f"{readable_name}_{post.id}.{extension}"
+                with open(os.path.join(location, "media", filename), "wb") as f:
+                    f.write(response.content)
+                    return filename
     
     # Try to use youtube_dl if it's one of the possible domains
     if domain in PLATFORMS:
