@@ -8,7 +8,7 @@ from datetime import datetime
 from secrets import REDDIT_USERNAME, REDDIT_PASSWORD
 from secrets import REDDIT_CLIENT_ID, REDDIT_SECRET
 
-IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "gifv"]
+IMAGE_EXTENSIONS = ["gif", "gifv", "jpg", "jpeg", "png"]
 VIDEO_EXTENSIONS = ["mp4"]
 PLATFORMS = ["redgifs.com", "gfycat.com", "imgur.com", "youtube.com"]
 
@@ -38,7 +38,7 @@ def get_upvoted_posts(client):
 
     return [
         upvoted for upvoted in client.user.me().upvoted(limit=None)
-        if saved.__class__.__name__ == "Submission"
+        if upvoted.__class__.__name__ == "Submission"
     ]
 
 
@@ -54,6 +54,7 @@ def get_post_html(post):
     html = html.replace("<!--user-->", f"/u/{post.author.name}" if post.author else "[deleted]")
     html = html.replace("<!--link-->", f"https://reddit.com{post.permalink}")
     html = html.replace("<!--content-link-->", post.url)
+    html = html.replace("<!--id-->", post.id)
     html = html.replace("<!--body-->", post.selftext_html or "")
     html = html.replace("<!--timestamp-->", str(dt))
     html = html.replace("<!--date-->", dt.strftime("%d %B, %Y"))

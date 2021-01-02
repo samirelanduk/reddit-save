@@ -2,6 +2,7 @@
 
 import argparse
 import os
+import re
 from tqdm import tqdm
 from utilities import *
 
@@ -32,24 +33,35 @@ else:
 if not os.path.exists(os.path.join(location, "media")):
     os.mkdir(os.path.join(location, "media"))
 
-posts_html = []
+# Are there any posts already?
+post_ids, posts_html = [], []
+if os.path.exists(os.path.join(location, html_file)):
+    with open(os.path.join(location, html_file)) as f:
+        current_html = f.read()
+        post_ids = re.findall(r'id="(.+?)"', current_html)
+        posts_html = re.findall(
+            r'(<div class="post"[\S\n\t\v ]+?<!--postend--><\/div>)',
+            current_html
+        )
 
-posts = get_posts(client)
-for post in tqdm(posts):
-    post_html = get_post_html(post)
-    media = save_media(post, location)
-    if media:
-        post_html = add_media_preview_to_html(post_html, media)
-    posts_html.append(post_html)
+# Get posts HTML
+posts = [p for p in get_posts(client) if p.id not in post_ids]
+if not posts:
+    print("No new saved posts")
+else:
+    for post in tqdm(posts):
+        post_html = get_post_html(post)
+        media = save_media(post, location)
+        if media:
+            post_html = add_media_preview_to_html(post_html, media)
+        posts_html.append(post_html)
 
+# Save HTML
 with open(os.path.join("html", html_file)) as f:
     html = f.read()
-
 with open(os.path.join("html", "style.css")) as f:
     html = html.replace("<style></style>", f"<style>\n{f.read()}\n</style>")
-
 html = html.replace("<!--posts-->", "\n".join(posts_html))
-
 with open(os.path.join(location, html_file), "w") as f:
     f.write(html)
 
