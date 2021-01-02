@@ -46,13 +46,14 @@ def get_post_html(post):
     """Takes a post object and creates a HTML for it - but not including the
     preview HTML."""
 
-    with open(os.path.join("html", "post.html")) as f:
+    with open(os.path.join("html", "post-div.html")) as f:
         html = f.read()
     dt = datetime.utcfromtimestamp(post.created_utc)
     html = html.replace("<!--title-->", post.title)
     html = html.replace("<!--subreddit-->", f"/r/{str(post.subreddit)}")
     html = html.replace("<!--user-->", f"/u/{post.author.name}" if post.author else "[deleted]")
-    html = html.replace("<!--link-->", f"https://reddit.com{post.permalink}")
+    html = html.replace("<!--link-->", f"posts/{post.id}.html")
+    html = html.replace("<!--reddit-link-->", f"https://reddit.com{post.permalink}")
     html = html.replace("<!--content-link-->", post.url)
     html = html.replace("<!--id-->", post.id)
     html = html.replace("<!--body-->", post.selftext_html or "")
@@ -155,3 +156,15 @@ def add_media_preview_to_html(post_html, media):
             f'<video controls><source src="{location}"></video>'
         )
     return post_html
+
+
+def create_post_page_html(post, post_html):
+    with open(os.path.join("html", "post.html")) as f:
+        html = f.read()
+    html = html.replace("<!--title-->", post.title)
+    html = html.replace("<!--post-->", post_html.replace("h2>", "h1>").replace(
+        '<img src="media/', '<img src="../media/'
+    ))
+    with open(os.path.join("html", "style.css")) as f:
+        html = html.replace("<style></style>", f"<style>\n{f.read()}\n</style>")
+    return html

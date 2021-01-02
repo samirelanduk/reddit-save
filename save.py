@@ -29,9 +29,11 @@ else:
     html_file = "upvoted.html"
     get_posts = get_upvoted_posts
 
-# Make directory for media
+# Make directory for media and posts
 if not os.path.exists(os.path.join(location, "media")):
     os.mkdir(os.path.join(location, "media"))
+if not os.path.exists(os.path.join(location, "posts")):
+    os.mkdir(os.path.join(location, "posts"))
 
 # Are there any posts already?
 post_ids, posts_html = [], []
@@ -55,6 +57,9 @@ else:
         if media:
             post_html = add_media_preview_to_html(post_html, media)
         posts_html.append(post_html)
+        page_html = create_post_page_html(post, post_html)
+        with open(os.path.join(location, "posts", f"{post.id}.html"), "w") as f:
+            f.write(page_html)
 
 # Save HTML
 with open(os.path.join("html", html_file)) as f:
@@ -64,4 +69,5 @@ with open(os.path.join("html", "style.css")) as f:
 html = html.replace("<!--posts-->", "\n".join(posts_html))
 with open(os.path.join(location, html_file), "w") as f:
     f.write(html)
+
 
