@@ -28,7 +28,7 @@ def get_saved_posts(client):
     """Gets a list of posts that the user has saved."""
 
     return [
-        saved for saved in client.user.me().saved(limit=None)
+        saved for saved in client.user.me().saved(limit=20)
         if saved.__class__.__name__ == "Submission"
     ]
 
@@ -167,4 +167,22 @@ def create_post_page_html(post, post_html):
     ))
     with open(os.path.join("html", "style.css")) as f:
         html = html.replace("<style></style>", f"<style>\n{f.read()}\n</style>")
+    comments_html = []
+    post.comments.replace_more(limit=0)
+    for comment in post.comments:
+        comments_html.append(get_comment_html(comment))
+    html = html.replace("<!--comments-->", "\n".join(comments_html))
+    return html
+
+
+def get_comment_html(comment):
+    with open(os.path.join("html", "comment-div.html")) as f:
+        html = f.read()
+    dt = datetime.utcfromtimestamp(comment.created_utc)
+    html = html.replace("<!--user-->", f"/u/{comment.author.name}" if comment.author else "[deleted]")
+    html = html.replace("<!--body-->", comment.body_html or "")
+    html = html.replace("<!--score-->", str(comment.score))
+    html = html.replace("<!--link-->", f"https://reddit.com{comment.permalink}")
+    html = html.replace("<!--timestamp-->", str(dt))
+    html = html.replace("<!--date-->", dt.strftime("%H:%M - %d %B, %Y"))
     return html
