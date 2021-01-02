@@ -66,20 +66,23 @@ def save_media(post, location):
 
     url = post.url
     stripped_url = url.split("?")[0]
-    if url.endswith(post.permalink): return
+    if url.endswith(post.permalink): return None
 
     # What is the key information?
     extension = stripped_url.split(".")[-1].lower()
     domain = ".".join(post.url.split("/")[2].split(".")[-2:])
     readable_name = list(filter(bool, post.permalink.split("/")))[-1]
 
+    # If it's an imgur gallery, forget it
+    if domain == "imgur.com" and "gallery" in url: return None
+
     # Can the media be obtained directly?
     if extension in IMAGE_EXTENSIONS + VIDEO_EXTENSIONS:
         filename = f"{readable_name}_{post.id}.{extension}"
-        with open(os.path.join(location, "media", filename), "wb") as f:
-            response = requests.get(post.url)
-            media_type = response.headers.get("Content-Type", "")
-            if media_type.startswith("image") or media_type.startswith("video"):
+        response = requests.get(post.url)
+        media_type = response.headers.get("Content-Type", "")
+        if media_type.startswith("image") or media_type.startswith("video"):
+            with open(os.path.join(location, "media", filename), "wb") as f:
                 f.write(response.content)
                 return filename
     
@@ -103,16 +106,18 @@ def save_media(post, location):
             else: return None
 
     # Is this an imgur image?
-    if domain =="imgur.com":
+    if domain =="imgur.com" and extension != "gifv":
         for extension in IMAGE_EXTENSIONS:
             direct_url = f'https://i.{url[url.find("//") + 2:]}.{extension}'
+            direct_url = direct_url.replace("i.imgur.com", "imgur.com")
+            direct_url = direct_url.replace("m.imgur.com", "imgur.com")
             response = requests.get(direct_url)
             if response.status_code == 200:
                 filename = f"{readable_name}_{post.id}.{extension}"
                 with open(os.path.join(location, "media", filename), "wb") as f:
                     f.write(response.content)
                     return filename
-    
+
     # Try to use youtube_dl if it's one of the possible domains
     if domain in PLATFORMS:
         options = {
@@ -125,7 +130,8 @@ def save_media(post, location):
         with youtube_dl.YoutubeDL(options) as ydl:
             try:
                 ydl.download([url])
-            except: pass
+            except:
+                pass
         for f in os.listdir(os.path.join(location, "media")):
             if f.startswith(f"{readable_name}_{post.id}"):
                 return f
