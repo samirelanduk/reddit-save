@@ -28,7 +28,7 @@ def get_saved_posts(client):
     """Gets a list of posts that the user has saved."""
 
     return [
-        saved for saved in client.user.me().saved(limit=20)
+        saved for saved in client.user.me().saved(limit=None)
         if saved.__class__.__name__ == "Submission"
     ]
 
@@ -175,7 +175,7 @@ def create_post_page_html(post, post_html):
     return html
 
 
-def get_comment_html(comment):
+def get_comment_html(comment, children=True):
     with open(os.path.join("html", "comment-div.html")) as f:
         html = f.read()
     dt = datetime.utcfromtimestamp(comment.created_utc)
@@ -185,4 +185,9 @@ def get_comment_html(comment):
     html = html.replace("<!--link-->", f"https://reddit.com{comment.permalink}")
     html = html.replace("<!--timestamp-->", str(dt))
     html = html.replace("<!--date-->", dt.strftime("%H:%M - %d %B, %Y"))
+    if children:
+        children_html = []
+        for child in comment.replies:
+            children_html.append(get_comment_html(child, children=False))
+        html = html.replace("<!--children-->", "\n".join(children_html))
     return html
