@@ -34,11 +34,20 @@ def get_saved_posts(client):
 
 
 def get_upvoted_posts(client):
-    """Gets a list of posts that the user has saved."""
+    """Gets a list of posts that the user has upvoted."""
 
     return [
         upvoted for upvoted in client.user.me().upvoted(limit=None)
         if upvoted.__class__.__name__ == "Submission"
+    ]
+
+
+def get_saved_comments(client):
+    """Gets a list of comments that the user has saved."""
+
+    return [
+        saved for saved in client.user.me().saved(limit=None)
+        if saved.__class__.__name__ != "Submission"
     ]
 
 
@@ -159,6 +168,8 @@ def add_media_preview_to_html(post_html, media):
 
 
 def create_post_page_html(post, post_html):
+    """Creates the HTML for a post's own page."""
+
     with open(os.path.join("html", "post.html")) as f:
         html = f.read()
     html = html.replace("<!--title-->", post.title)
@@ -176,14 +187,21 @@ def create_post_page_html(post, post_html):
 
 
 def get_comment_html(comment, children=True):
+    """Takes a post object and creates a HTML for it - it will get its children
+    too unless you specify otherwise."""
+
     with open(os.path.join("html", "comment-div.html")) as f:
         html = f.read()
     dt = datetime.utcfromtimestamp(comment.created_utc)
-    html = html.replace("<!--user-->", f"/u/{comment.author.name}" if comment.author else "[deleted]")
+    html = html.replace(
+        "<!--user-->",
+        f"/u/{comment.author.name}" if comment.author else "[deleted]"
+    )
     html = html.replace("<!--body-->", comment.body_html or "")
     html = html.replace("<!--score-->", str(comment.score))
     html = html.replace("<!--link-->", f"https://reddit.com{comment.permalink}")
     html = html.replace("<!--timestamp-->", str(dt))
+    html = html.replace("<!--id-->", comment.id)
     html = html.replace("<!--date-->", dt.strftime("%H:%M - %d %B, %Y"))
     if children:
         children_html = []

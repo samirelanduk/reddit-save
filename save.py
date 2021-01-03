@@ -25,9 +25,11 @@ client = make_client()
 if mode == "saved":
     html_file = "saved.html"
     get_posts = get_saved_posts
+    get_comments = get_saved_comments
 else:
     html_file = "upvoted.html"
     get_posts = get_upvoted_posts
+    get_comments = lambda client: []
 
 # Make directory for media and posts
 if not os.path.exists(os.path.join(location, "media")):
@@ -36,17 +38,18 @@ if not os.path.exists(os.path.join(location, "posts")):
     os.mkdir(os.path.join(location, "posts"))
 
 # Are there any posts already?
-post_ids, posts_html = [], []
+post_ids, existing_posts_html = [], []
 if os.path.exists(os.path.join(location, html_file)):
     with open(os.path.join(location, html_file)) as f:
         current_html = f.read()
         post_ids = re.findall(r'id="(.+?)"', current_html)
-        posts_html = re.findall(
+        existing_posts_html = re.findall(
             r'(<div class="post"[\S\n\t\v ]+?<!--postend--><\/div>)',
             current_html
         )
 
 # Get posts HTML
+posts_html = []
 posts = [p for p in get_posts(client) if p.id not in post_ids]
 if not posts:
     print("No new saved posts")
@@ -60,6 +63,30 @@ else:
         page_html = create_post_page_html(post, post_html)
         with open(os.path.join(location, "posts", f"{post.id}.html"), "w") as f:
             f.write(page_html)
+posts_html += existing_posts_html
+
+# Are there any comments already?
+comment_ids, existing_comments_html = [], []
+if os.path.exists(os.path.join(location, html_file)):
+    with open(os.path.join(location, html_file)) as f:
+        current_html = f.read()
+        comment_ids = re.findall(r'id="(.+?)"', current_html)
+        existing_comments_html = re.findall(
+            r'(<div class="comment"[\S\n\t\v ]+?<!--commentend--><\/div>)',
+            current_html
+        )
+
+# Get comments HTML
+comments_html = []
+comments = [c for c in get_comments(client) if c.id not in comment_ids]
+if not comments:
+    print("No new saved comments")
+else:
+    for comment in tqdm(comments):
+        comment_html = get_comment_html(comment)
+        media = save_media(post, location)
+        comments_html.append(comment_html)
+comments_html += existing_comments_html
 
 # Save HTML
 with open(os.path.join("html", html_file)) as f:
@@ -67,6 +94,7 @@ with open(os.path.join("html", html_file)) as f:
 with open(os.path.join("html", "style.css")) as f:
     html = html.replace("<style></style>", f"<style>\n{f.read()}\n</style>")
 html = html.replace("<!--posts-->", "\n".join(posts_html))
+html = html.replace("<!--comments-->", "\n".join(comments_html))
 with open(os.path.join(location, html_file), "w") as f:
     f.write(html)
 
