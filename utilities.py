@@ -191,22 +191,25 @@ def create_post_page_html(post, post_html):
     comments_html = []
     post.comments.replace_more(limit=0)
     for comment in post.comments:
-        comments_html.append(get_comment_html(comment))
+        comments_html.append(get_comment_html(comment, op=post.author.name))
     html = html.replace("<!--comments-->", "\n".join(comments_html))
     return html
 
 
-def get_comment_html(comment, children=True):
+def get_comment_html(comment, children=True, op=None):
     """Takes a post object and creates a HTML for it - it will get its children
     too unless you specify otherwise."""
 
     with open(os.path.join("html", "comment-div.html")) as f:
         html = f.read()
     dt = datetime.utcfromtimestamp(comment.created_utc)
-    html = html.replace(
-        "<!--user-->",
-        f"/u/{comment.author.name}" if comment.author else "[deleted]"
-    )
+    author = "[deleted]"
+    if comment.author:
+        if comment.author == op:
+            author = f'<span class="op">/u/{comment.author.name}</span>'
+        else:
+            author = f"/u/{comment.author.name}"
+    html = html.replace("<!--user-->", author)
     html = html.replace("<!--body-->", comment.body_html or "")
     html = html.replace("<!--score-->", str(comment.score))
     html = html.replace("<!--link-->", f"https://reddit.com{comment.permalink}")
@@ -216,6 +219,6 @@ def get_comment_html(comment, children=True):
     if children:
         children_html = []
         for child in comment.replies:
-            children_html.append(get_comment_html(child, children=False))
+            children_html.append(get_comment_html(child, children=False, op=op))
         html = html.replace("<!--children-->", "\n".join(children_html))
     return html

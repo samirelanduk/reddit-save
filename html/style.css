@@ -151,6 +151,14 @@ h1 {
     padding: 8px 16px;
 }
 
+.op {
+    background: #0055df;
+    color: white;
+    font-weight: 700;
+    padding: 0px 4px;
+    border-radius: 4px;
+}
+
 button {
     border: 1px solid #1abc9c60;
     color: #1abc9c;
