@@ -1,8 +1,124 @@
-a {
-    display: block;
+* {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    outline: none;
+    font-size: 100%;
+    font: inherit;
+    vertical-align: baseline;
+    list-style: none;
+    background-color: inherit;
+    box-sizing: border-box;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+}
+
+body {
+    font-family: 'Open Sans', Verdana;
 }
 
 img, video {
     max-width: 200px;
     max-height: 300px;
+}
+
+a {
+    color: #0079d3;
+    text-decoration: none;
+}
+
+p {
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+
+em {
+    font-style: italic;
+}
+
+strong {
+    font-weight: bold;
+}
+
+code {
+    font-family: monospace;
+    white-space: pre;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+h1 {
+    font-weight: bold;
+    font-size: 24px;
+    padding: 8px 16px;
+}
+
+.post, .comment {
+    border-top: 1px solid #f0f0f0;
+    padding: 12px 16px;
+}
+
+.post h2 {
+    font-weight: bold;
+    font-size: 18px;
+}
+
+.post h1 {
+    padding: 0;
+    margin-bottom: 8px;
+}
+
+.post .info {
+    font-size: 12px;
+    font-weight: 300;
+    margin-bottom: 16px;
+}
+
+.post .info time {
+    font-weight: 500;
+}
+
+.post .info time, .post .info span {
+    padding-right: 4px;
+}
+
+.post .links a {
+    padding-right: 4px;
+    font-weight: 400;
+}
+
+.post .links a:after {
+    content: "|";
+    position: relative;
+    right: -4px;
+}
+
+.post .links a:last-child:after {
+    content: "";
+}
+
+.comment .info {
+    display: flex;
+    align-items: baseline;
+    margin-bottom: 8px;
+}
+
+.comment .info time {
+    padding-right: 12px;
+}
+
+.comment .info div {
+    font-weight: 300;
+    font-size: 12px;
+    padding-right: 8px;
+    position: relative;
+    top: -1px;
+}
+
+.comments h2 {
+    font-weight: bold;
+    font-size: 20px;
+    padding: 8px 16px;
 }
