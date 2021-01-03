@@ -93,6 +93,8 @@ with open(os.path.join("html", html_file)) as f:
     html = f.read()
 with open(os.path.join("html", "style.css")) as f:
     html = html.replace("<style></style>", f"<style>\n{f.read()}\n</style>")
+with open(os.path.join("html", "main.js")) as f:
+    html = html.replace("<script></script>", f"<script>\n{f.read()}\n</script>")
 html = html.replace("<!--posts-->", "\n".join(posts_html))
 html = html.replace("<!--comments-->", "\n".join(comments_html))
 with open(os.path.join(location, html_file), "w") as f:

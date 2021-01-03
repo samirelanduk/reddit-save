@@ -122,3 +122,21 @@ h1 {
     font-size: 20px;
     padding: 8px 16px;
 }
+
+button {
+    border: 1px solid #1abc9c60;
+    color: #1abc9c;
+    border-radius: 5px;
+    padding: 4px 8px;;
+    font-size: 12px;
+    cursor: pointer;
+    position: absolute;
+    right: 16px;
+    font-weight: bold;
+    top: 10px;
+    background-color: #1abc9c20;
+}
+
+button:hover {
+    background-color: #1abc9c40;
+}
