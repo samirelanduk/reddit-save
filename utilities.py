@@ -65,7 +65,9 @@ def get_post_html(post):
     html = html.replace("<!--reddit-link-->", f"https://reddit.com{post.permalink}")
     html = html.replace("<!--content-link-->", post.url)
     html = html.replace("<!--id-->", post.id)
-    html = html.replace("<!--body-->", post.selftext_html or "")
+    html = html.replace("<!--body-->", (post.selftext_html or "").replace(
+        '<a href="/r/', '<a href="https://reddit.com/r/'
+    ))
     html = html.replace("<!--timestamp-->", str(dt))
     html = html.replace("<!--date-->", dt.strftime("%d %B, %Y"))
     return html
@@ -210,7 +212,9 @@ def get_comment_html(comment, children=True, op=None):
         else:
             author = f"/u/{comment.author.name}"
     html = html.replace("<!--user-->", author)
-    html = html.replace("<!--body-->", comment.body_html or "")
+    html = html.replace("<!--body-->", (comment.body_html or "").replace(
+        '<a href="/r/', '<a href="https://reddit.com/r/'
+    ))
     html = html.replace("<!--score-->", str(comment.score))
     html = html.replace("<!--link-->", f"https://reddit.com{comment.permalink}")
     html = html.replace("<!--timestamp-->", str(dt))
