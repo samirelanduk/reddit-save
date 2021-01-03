@@ -93,7 +93,7 @@ h1 {
     font-size: 18px;
 }
 
-.post h1 {
+.post h1, .comment h1 {
     padding: 0;
     margin-bottom: 8px;
 }
