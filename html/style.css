@@ -19,7 +19,8 @@ body {
 
 img, video {
     max-width: 200px;
-    max-height: 300px;
+    max-height: 200px;
+    cursor: pointer;
 }
 
 a {
@@ -139,4 +140,25 @@ button {
 
 button:hover {
     background-color: #1abc9c40;
+}
+
+.preview.full {
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    left: 0;
+    top: 0;
+    background-color: #00000080;
+    display: flex;
+    justify-content: center;
+    z-index: 100;
+    align-items: center;
+}
+
+.preview.full img, .preview.full video {
+    max-width: 100vw;
+    max-height: 100vh;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
 }

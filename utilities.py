@@ -175,6 +175,8 @@ def create_post_page_html(post, post_html):
     html = html.replace("<!--title-->", post.title)
     html = html.replace("<!--post-->", post_html.replace("h2>", "h1>").replace(
         '<img src="media/', '<img src="../media/'
+    ).replace(
+        '<source src="media/', '<source src="../media/'
     ))
     with open(os.path.join("html", "style.css")) as f:
         html = html.replace("<style></style>", f"<style>\n{f.read()}\n</style>")
