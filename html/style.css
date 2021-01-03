@@ -46,6 +46,21 @@ code {
     white-space: pre;
 }
 
+blockquote {
+    font-style: italic;
+    padding-left: 8px;
+    position: relative;
+}
+
+blockquote:before {
+    position: absolute;
+    left: 0;
+    width: 4px;
+    content: "";
+    height: 100%;
+    background-color: #16a085;
+}
+
 a:hover {
     text-decoration: underline;
 }

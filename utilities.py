@@ -101,11 +101,16 @@ def save_media(post, location):
     if domain == "redd.it":
         downloader = Downloader(max_q=True, log=False)
         downloader.url = url
-        name = downloader.download()
-        extension = name.split(".")[-1]
-        filename = f"{readable_name}_{post.id}.{extension}"
-        os.rename(name, os.path.join(location, "media", filename))
-        return filename
+        current = os.getcwd()
+        try:
+            name = downloader.download()
+            extension = name.split(".")[-1]
+            filename = f"{readable_name}_{post.id}.{extension}"
+            os.rename(name, os.path.join(location, "media", filename))
+            return filename
+        except:
+            os.chdir(current)
+            return None
 
     # Is it a gfycat link that redirects? Update the URL if possible
     if domain == "gfycat.com":

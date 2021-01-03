@@ -17,20 +17,20 @@ const toggleMedia = e => {
 }
 
 window.addEventListener("load", function() {
-const postsSection = document.querySelector(".posts-section");
-const commentsSection = document.querySelector(".comments-section");
-if (commentsSection) {
-  commentsSection.style.display = "none";
-  const toggleButton = document.createElement("button");
-  toggleButton.innerText = "toggle";
-  toggleButton.addEventListener("click", toggleView);
-  document.body.insertBefore(toggleButton, postsSection);
-}
+  const postsSection = document.querySelector(".posts-section");
+  const commentsSection = document.querySelector(".comments-section");
+  if (commentsSection) {
+    commentsSection.style.display = "none";
+    const toggleButton = document.createElement("button");
+    toggleButton.innerText = "toggle";
+    toggleButton.addEventListener("click", toggleView);
+    document.body.insertBefore(toggleButton, postsSection);
+  }
 
-for (let preview of document.querySelectorAll(".preview")) {
-    const media = preview.querySelector("img") || preview.querySelector("video");
-    if (media) {
-      media.addEventListener("click", toggleMedia);
-    }
-}
+  for (let preview of document.querySelectorAll(".preview")) {
+      const media = preview.querySelector("img") || preview.querySelector("video");
+      if (media) {
+        media.addEventListener("click", toggleMedia);
+      }
+  }
 })
