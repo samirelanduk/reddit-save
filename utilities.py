@@ -5,8 +5,8 @@ from redvid import Downloader
 import youtube_dl
 import re
 from datetime import datetime
-from secrets2 import REDDIT_USERNAME, REDDIT_PASSWORD
-from secrets2 import REDDIT_CLIENT_ID, REDDIT_SECRET
+from secrets import REDDIT_USERNAME, REDDIT_PASSWORD
+from secrets import REDDIT_CLIENT_ID, REDDIT_SECRET
 
 IMAGE_EXTENSIONS = ["gif", "gifv", "jpg", "jpeg", "png"]
 VIDEO_EXTENSIONS = ["mp4"]
@@ -28,7 +28,7 @@ def get_saved_posts(client):
     """Gets a list of posts that the user has saved."""
 
     return [
-        saved for saved in client.user.me().saved(limit=5)
+        saved for saved in client.user.me().saved(limit=None)
         if saved.__class__.__name__ == "Submission"
     ]
 
@@ -193,7 +193,9 @@ def create_post_page_html(post, post_html):
     comments_html = []
     post.comments.replace_more(limit=0)
     for comment in post.comments:
-        comments_html.append(get_comment_html(comment, op=post.author.name))
+        comments_html.append(get_comment_html(
+            comment, op=post.author.name if post.author else None
+        ))
     html = html.replace("<!--comments-->", "\n".join(comments_html))
     return html
 
