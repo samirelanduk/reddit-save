@@ -28,9 +28,21 @@ a {
     text-decoration: none;
 }
 
-p {
+p, li {
     font-size: 14px;
     margin-bottom: 8px;
+}
+
+ul li {
+    list-style: disc;
+}
+
+ol li {
+    list-style-type: decimal;
+}
+
+li {
+    margin-left: 24px;
 }
 
 em {
