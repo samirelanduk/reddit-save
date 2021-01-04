@@ -6,7 +6,7 @@ Browsing through the stuff you've liked or saved on reddit is really enjoyable a
 
 However over time more and more of the older posts will be deleted or missing, and the historical record atrophies. Use this tool to back up those posts and comments to your computer where you can browse them offline, and where they are safe forever.
 
-reddit-save will backup saved posts, saved comments, and upvoted posts. It can't do upvoted comments because the reddit API doesn't expose them.
+reddit-save will backup saved posts, saved comments, and upvoted posts. It can't do upvoted comments because the reddit API doesn't expose them. Crucially, when it is run again on the same location it will ignore any posts/comments previously archived - once something is saved, it's saved permanently.
 
 ## Installation
 
