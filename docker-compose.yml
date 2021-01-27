@@ -1,0 +1,12 @@
+version: "3.2"    
+services:
+    reddit-save:
+        build: .
+        image: reddit-save:latest
+        environment:
+          REDDIT_USERNAME:
+          REDDIT_PASSWORD:
+          REDDIT_CLIENT_ID:
+          REDDIT_SECRET:
+        volumes:
+          - "./archive:/opt/app/archive"

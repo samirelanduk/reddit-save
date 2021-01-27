@@ -9,10 +9,12 @@ from utilities import *
 # Get arguments
 parser = argparse.ArgumentParser(description="Save reddit posts to file.")
 parser.add_argument("mode", type=str, nargs=1, choices=["saved", "upvoted"], help="The file to convert.")
-parser.add_argument("location", type=str, nargs=1, help="The path to save to.")
+
+if os.getenv("DOCKER", "0") != "1":
+    parser.add_argument("location", type=str, nargs=1, help="The path to save to.")
 args = parser.parse_args()
 mode = args.mode[0]
-location = args.location[0]
+location = "./archive/" if os.getenv("DOCKER", "0") == "1" else args.location[0]
 
 # Is location specified a directory?
 if not os.path.isdir(location):
