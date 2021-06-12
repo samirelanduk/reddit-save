@@ -5,8 +5,15 @@ from redvid import Downloader
 import youtube_dl
 import re
 from datetime import datetime
-from secrets import REDDIT_USERNAME, REDDIT_PASSWORD
-from secrets import REDDIT_CLIENT_ID, REDDIT_SECRET
+
+try: 
+    from secrets import REDDIT_USERNAME, REDDIT_PASSWORD
+    from secrets import REDDIT_CLIENT_ID, REDDIT_SECRET
+except ImportError:
+    REDDIT_USERNAME = os.getenv("REDDIT_USERNAME")
+    REDDIT_PASSWORD = os.getenv("REDDIT_PASSWORD")
+    REDDIT_CLIENT_ID = os.getenv("REDDIT_CLIENT_ID")
+    REDDIT_SECRET = os.getenv("REDDIT_SECRET")
 
 IMAGE_EXTENSIONS = ["gif", "gifv", "jpg", "jpeg", "png"]
 VIDEO_EXTENSIONS = ["mp4"]
