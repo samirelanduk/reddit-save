@@ -43,3 +43,23 @@ The first command will backup your saved posts/comments to a file called folder_
 Each post will have its top-level comments saved, as well as each of their immediate child comments (but no further).
 
 Linked media files (images, videos etc.) will be saved locally where possible, though imgur is currently not well supported in all cases.
+
+## Use with Docker
+
+Rather than installing dependencies locally, you can use docker to create a local image and use that instead. First build the image:
+
+```bash
+$ docker build -t redditsave .
+```
+
+Then run reddit-save within a container created from this image:
+
+```bash
+$ docker run \
+-e REDDIT_USERNAME=spez \
+-e REDDIT_PASSWORD="myredditpassword123" \
+-e REDDIT_CLIENT_ID="sadsU7-zfX" \
+-e REDDIT_SECRET="687DDJSS&999d-hdkjK8h" \
+-v /Local/location/to/save/in:/opt/app/archive \
+redditsave saved
+```
