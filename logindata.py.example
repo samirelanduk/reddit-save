@@ -1,0 +1,4 @@
+REDDIT_USERNAME = "username"
+REDDIT_PASSWORD = "password"
+REDDIT_CLIENT_ID = "id"
+REDDIT_SECRET = "secret"

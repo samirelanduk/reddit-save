@@ -6,9 +6,9 @@ import youtube_dl
 import re
 from datetime import datetime
 
-try: 
-    from secrets import REDDIT_USERNAME, REDDIT_PASSWORD
-    from secrets import REDDIT_CLIENT_ID, REDDIT_SECRET
+try:
+    from logindata import REDDIT_USERNAME, REDDIT_PASSWORD
+    from logindata import REDDIT_CLIENT_ID, REDDIT_SECRET
 except ImportError:
     REDDIT_USERNAME = os.getenv("REDDIT_USERNAME")
     REDDIT_PASSWORD = os.getenv("REDDIT_PASSWORD")
@@ -18,6 +18,7 @@ except ImportError:
 IMAGE_EXTENSIONS = ["gif", "gifv", "jpg", "jpeg", "png"]
 VIDEO_EXTENSIONS = ["mp4"]
 PLATFORMS = ["redgifs.com", "gfycat.com", "imgur.com", "youtube.com"]
+
 
 def make_client():
     """Creates a PRAW client with the details in the secrets.py file."""
@@ -62,7 +63,7 @@ def get_post_html(post):
     """Takes a post object and creates a HTML for it - but not including the
     preview HTML."""
 
-    with open(os.path.join("html", "post-div.html")) as f:
+    with open(os.path.join("html", "post-div.html"), encoding="utf-8") as f:
         html = f.read()
     dt = datetime.utcfromtimestamp(post.created_utc)
     html = html.replace("<!--title-->", post.title)
@@ -105,7 +106,7 @@ def save_media(post, location):
             with open(os.path.join(location, "media", filename), "wb") as f:
                 f.write(response.content)
                 return filename
-    
+
     # Is this a v.redd.it link?
     if domain == "redd.it":
         downloader = Downloader(max_q=True, log=False)
@@ -128,10 +129,11 @@ def save_media(post, location):
             match = re.search(r"http([\dA-Za-z\+\:\/\.]+)\.mp4", html.decode())
             if match:
                 url = match.group()
-            else: return None
+            else:
+                return None
 
     # Is this an imgur image?
-    if domain =="imgur.com" and extension != "gifv":
+    if domain == "imgur.com" and extension != "gifv":
         for extension in IMAGE_EXTENSIONS:
             direct_url = f'https://i.{url[url.find("//") + 2:]}.{extension}'
             direct_url = direct_url.replace("i.imgur.com", "imgur.com")
@@ -149,7 +151,7 @@ def save_media(post, location):
             "nocheckcertificate": True, "quiet": True, "no_warnings": True,
             "ignoreerrors": True,
             "outtmpl": os.path.join(
-                location, "media",  f"{readable_name}_{post.id}" + ".%(ext)s"
+                location, "media", f"{readable_name}_{post.id}" + ".%(ext)s"
             )
         }
         with youtube_dl.YoutubeDL(options) as ydl:
@@ -165,7 +167,7 @@ def save_media(post, location):
 def add_media_preview_to_html(post_html, media):
     """Takes post HTML and returns a modified version with the preview
     inserted."""
-    
+
     extension = media.split(".")[-1]
     location = "/".join(["media", media])
     if extension in IMAGE_EXTENSIONS:
@@ -184,7 +186,7 @@ def add_media_preview_to_html(post_html, media):
 def create_post_page_html(post, post_html):
     """Creates the HTML for a post's own page."""
 
-    with open(os.path.join("html", "post.html")) as f:
+    with open(os.path.join("html", "post.html"), encoding="utf-8") as f:
         html = f.read()
     html = html.replace("<!--title-->", post.title)
     html = html.replace("<!--post-->", post_html.replace("h2>", "h1>").replace(
@@ -193,9 +195,9 @@ def create_post_page_html(post, post_html):
         '<source src="media/', '<source src="../media/'
     ))
     html = re.sub(r'<a href="posts(.+?)</a>', "", html)
-    with open(os.path.join("html", "style.css")) as f:
+    with open(os.path.join("html", "style.css"), encoding="utf-8") as f:
         html = html.replace("<style></style>", f"<style>\n{f.read()}\n</style>")
-    with open(os.path.join("html", "main.js")) as f:
+    with open(os.path.join("html", "main.js"), encoding="utf-8") as f:
         html = html.replace("<script></script>", f"<script>\n{f.read()}\n</script>")
     comments_html = []
     post.comments.replace_more(limit=0)
@@ -211,7 +213,7 @@ def get_comment_html(comment, children=True, op=None):
     """Takes a post object and creates a HTML for it - it will get its children
     too unless you specify otherwise."""
 
-    with open(os.path.join("html", "comment-div.html")) as f:
+    with open(os.path.join("html", "comment-div.html"), encoding="utf-8") as f:
         html = f.read()
     dt = datetime.utcfromtimestamp(comment.created_utc)
     author = "[deleted]"

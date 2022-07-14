@@ -20,7 +20,7 @@ If you get permission errors, try using `sudo` or using a virtual environment.
 
 You will need [ffmpeg](https://ffmpeg.org/) installed somewhere too.
 
-You then need to create a file in the reddit-save directory called secrets.py. You will need to add four things to this file, your reddit username and password, and a reddit client ID and secret. The latter two are obtained using [the instructions here](https://github.com/reddit-archive/reddit/wiki/OAuth2-Quick-Start-Example#first-steps). The file should look something like this:
+Rename the file `logindata.py.example` to `logindata.py`. You will need to add four things to this file, your reddit username and password, and a reddit client ID and secret. The latter two are obtained using [the instructions here](https://github.com/reddit-archive/reddit/wiki/OAuth2-Quick-Start-Example#first-steps). The file should look something like this:
 
 ```python
 REDDIT_USERNAME = "spez"
