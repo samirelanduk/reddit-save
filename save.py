@@ -42,7 +42,7 @@ if not os.path.exists(os.path.join(location, "posts")):
 # Are there any posts already?
 post_ids, existing_posts_html = [], []
 if os.path.exists(os.path.join(location, html_file)):
-    with open(os.path.join(location, html_file)) as f:
+    with open(os.path.join(location, html_file), encoding="utf-8") as f:
         current_html = f.read()
         post_ids = re.findall(r'id="(.+?)"', current_html)
         existing_posts_html = re.findall(
@@ -70,7 +70,7 @@ posts_html += existing_posts_html
 # Are there any comments already?
 comment_ids, existing_comments_html = [], []
 if os.path.exists(os.path.join(location, html_file)):
-    with open(os.path.join(location, html_file)) as f:
+    with open(os.path.join(location, html_file), encoding="utf-8") as f:
         current_html = f.read()
         comment_ids = re.findall(r'id="(.+?)"', current_html)
         existing_comments_html = re.findall(
@@ -91,11 +91,11 @@ else:
 comments_html += existing_comments_html
 
 # Save HTML
-with open(os.path.join("html", html_file)) as f:
+with open(os.path.join("html", html_file), encoding="utf-8") as f:
     html = f.read()
-with open(os.path.join("html", "style.css")) as f:
+with open(os.path.join("html", "style.css"), encoding="utf-8") as f:
     html = html.replace("<style></style>", f"<style>\n{f.read()}\n</style>")
-with open(os.path.join("html", "main.js")) as f:
+with open(os.path.join("html", "main.js"), encoding="utf-8") as f:
     html = html.replace("<script></script>", f"<script>\n{f.read()}\n</script>")
 html = html.replace("<!--posts-->", "\n".join(posts_html))
 html = html.replace("<!--comments-->", "\n".join(comments_html))
