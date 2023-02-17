@@ -2,7 +2,7 @@ import os
 import praw
 import requests
 from redvid import Downloader
-import youtube_dl
+import yt_dlp
 import re
 from datetime import datetime
 
@@ -149,12 +149,12 @@ def save_media(post, location):
     if domain in PLATFORMS:
         options = {
             "nocheckcertificate": True, "quiet": True, "no_warnings": True,
-            "ignoreerrors": True,
+            "ignoreerrors": True, "no-progress": True,
             "outtmpl": os.path.join(
                 location, "media", f"{readable_name}_{post.id}" + ".%(ext)s"
             )
         }
-        with youtube_dl.YoutubeDL(options) as ydl:
+        with yt_dlp.YoutubeDL(options) as ydl:
             try:
                 ydl.download([url])
             except:

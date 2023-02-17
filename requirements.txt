@@ -1,5 +1,6 @@
 praw
 requests
 youtube_dl
+yt-dlp
 tqdm
 redvid
