@@ -44,14 +44,14 @@ if not os.path.exists(os.path.join(location, "posts")):
 # Get files to search through
 print("Getting previously saved posts and comments...")
 existing_ids, existing_posts_html, existing_comments_html = get_previous(location, html_file)
-print(len(existing_posts_html), "previous posts saved.")
-print(len(existing_comments_html), "previous comments saved.")
+print(len(existing_posts_html), "previous posts.")
+print(len(existing_comments_html), "previous comments.")
 
 # Get posts HTML
 posts_html = []
 posts = [p for p in get_posts(client) if p.id not in existing_ids]
 if not posts:
-    print("No new saved posts")
+    print("No new posts")
 else:
     for post in tqdm(posts):
         post_html = get_post_html(post)
@@ -68,7 +68,7 @@ posts_html += existing_posts_html
 comments_html = []
 comments = [c for c in get_comments(client) if c.id not in existing_ids]
 if not comments:
-    print("No new saved comments")
+    print("No new comments")
 else:
     for comment in tqdm(comments):
         comment_html = get_comment_html(comment)
