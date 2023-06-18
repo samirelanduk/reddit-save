@@ -32,6 +32,39 @@ def make_client():
     )
 
 
+def get_previous(location, html_file):
+    html_files = [f for f in os.listdir(location) if f.endswith(".html")]
+    pattern = html_file.replace(".html", r"\.(\d+)?\.html")
+    matches = [re.match(pattern, f) for f in html_files]
+    matches = [m[0] for m in matches if m]
+    matches.sort(key=lambda x: int(x.split(".")[1]))
+    existing_ids = []
+    existing_posts_html = []
+    existing_comments_html = []
+    if html_file in html_files: matches.append(html_file)
+    for match in matches:
+        with open(os.path.join(location, match), encoding="utf-8") as f:
+            current_html = f.read()
+            for id in re.findall(r'id="(.+?)"', current_html):
+                if id not in existing_ids:
+                    existing_ids.append(id)
+            posts = re.findall(
+                r'(<div class="post"[\S\n\t\v ]+?<!--postend--><\/div>)',
+                current_html
+            )
+            comments = re.findall(
+                r'(<div class="comment"[\S\n\t\v ]+?<!--commentend--><\/div>)',
+                current_html
+            )
+            for post in posts:
+                if post not in existing_posts_html:
+                    existing_posts_html.append(post)
+            for comment in comments:
+                if comment not in existing_comments_html:
+                    existing_comments_html.append(comment)
+    return existing_ids, existing_posts_html, existing_comments_html
+
+
 def get_saved_posts(client):
     """Gets a list of posts that the user has saved."""
 
@@ -100,7 +133,10 @@ def save_media(post, location):
     # Can the media be obtained directly?
     if extension in IMAGE_EXTENSIONS + VIDEO_EXTENSIONS:
         filename = f"{readable_name}_{post.id}.{extension}"
-        response = requests.get(post.url)
+        try:
+            response = requests.get(post.url)
+        except:
+            return
         media_type = response.headers.get("Content-Type", "")
         if media_type.startswith("image") or media_type.startswith("video"):
             with open(os.path.join(location, "media", filename), "wb") as f:
@@ -138,7 +174,9 @@ def save_media(post, location):
             direct_url = f'https://i.{url[url.find("//") + 2:]}.{extension}'
             direct_url = direct_url.replace("i.imgur.com", "imgur.com")
             direct_url = direct_url.replace("m.imgur.com", "imgur.com")
-            response = requests.get(direct_url)
+            try:
+                response = requests.get(direct_url)
+            except: continue
             if response.status_code == 200:
                 filename = f"{readable_name}_{post.id}.{extension}"
                 with open(os.path.join(location, "media", filename), "wb") as f:
@@ -158,7 +196,8 @@ def save_media(post, location):
             try:
                 ydl.download([url])
             except:
-                pass
+                os.chdir(current)
+                return
         for f in os.listdir(os.path.join(location, "media")):
             if f.startswith(f"{readable_name}_{post.id}"):
                 return f
@@ -237,3 +276,25 @@ def get_comment_html(comment, children=True, op=None):
             children_html.append(get_comment_html(child, children=False, op=op))
         html = html.replace("<!--children-->", "\n".join(children_html))
     return html
+
+
+def save_html(posts, comments, location, html_file, page, has_next):
+    with open(os.path.join("html", html_file), encoding="utf-8") as f:
+        html = f.read()
+    with open(os.path.join("html", "style.css"), encoding="utf-8") as f:
+        html = html.replace("<style></style>", f"<style>\n{f.read()}\n</style>")
+    with open(os.path.join("html", "main.js"), encoding="utf-8") as f:
+        html = html.replace("<script></script>", f"<script>\n{f.read()}\n</script>")
+    if page == 0 or page is None:
+        html = html.replace("Previous</a>", "</a>")
+    else:
+        html = html.replace(".p.html", f".{page-1}.html")
+    if not has_next or page is None:
+        html = html.replace("Next</a>", "</a>")
+    else:
+        html = html.replace(".n.html", f".{page+1}.html")
+    html = html.replace("<!--posts-->", "\n".join(posts))
+    html = html.replace("<!--comments-->", "\n".join(comments))
+    file_name = html_file if page is None else html_file.replace(".html", f".{page}.html")
+    with open(os.path.join(location, file_name), "w", encoding="utf-8") as f:
+        f.write(html)

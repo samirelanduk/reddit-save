@@ -9,11 +9,13 @@ from utilities import *
 # Get arguments
 parser = argparse.ArgumentParser(description="Save reddit posts to file.")
 parser.add_argument("mode", type=str, nargs=1, choices=["saved", "upvoted"], help="The file to convert.")
-
 if os.getenv("DOCKER", "0") != "1":
     parser.add_argument("location", type=str, nargs=1, help="The path to save to.")
+# Optional page size argument
+parser.add_argument("--page-size", type=int, nargs=1, default=[0], help="The number of posts to save per page.")
 args = parser.parse_args()
 mode = args.mode[0]
+page_size = args.page_size[0]
 location = "./archive/" if os.getenv("DOCKER", "0") == "1" else args.location[0]
 
 # Is location specified a directory?
@@ -39,20 +41,15 @@ if not os.path.exists(os.path.join(location, "media")):
 if not os.path.exists(os.path.join(location, "posts")):
     os.mkdir(os.path.join(location, "posts"))
 
-# Are there any posts already?
-post_ids, existing_posts_html = [], []
-if os.path.exists(os.path.join(location, html_file)):
-    with open(os.path.join(location, html_file), encoding="utf-8") as f:
-        current_html = f.read()
-        post_ids = re.findall(r'id="(.+?)"', current_html)
-        existing_posts_html = re.findall(
-            r'(<div class="post"[\S\n\t\v ]+?<!--postend--><\/div>)',
-            current_html
-        )
+# Get files to search through
+print("Getting previously saved posts and comments...")
+existing_ids, existing_posts_html, existing_comments_html = get_previous(location, html_file)
+print(len(existing_posts_html), "previous posts saved.")
+print(len(existing_comments_html), "previous comments saved.")
 
 # Get posts HTML
 posts_html = []
-posts = [p for p in get_posts(client) if p.id not in post_ids]
+posts = [p for p in get_posts(client) if p.id not in existing_ids]
 if not posts:
     print("No new saved posts")
 else:
@@ -67,20 +64,9 @@ else:
             f.write(page_html)
 posts_html += existing_posts_html
 
-# Are there any comments already?
-comment_ids, existing_comments_html = [], []
-if os.path.exists(os.path.join(location, html_file)):
-    with open(os.path.join(location, html_file), encoding="utf-8") as f:
-        current_html = f.read()
-        comment_ids = re.findall(r'id="(.+?)"', current_html)
-        existing_comments_html = re.findall(
-            r'(<div class="comment"[\S\n\t\v ]+?<!--commentend--><\/div>)',
-            current_html
-        )
-
 # Get comments HTML
 comments_html = []
-comments = [c for c in get_comments(client) if c.id not in comment_ids]
+comments = [c for c in get_comments(client) if c.id not in existing_ids]
 if not comments:
     print("No new saved comments")
 else:
@@ -90,16 +76,14 @@ else:
         comments_html.append(comment_html)
 comments_html += existing_comments_html
 
-# Save HTML
-with open(os.path.join("html", html_file), encoding="utf-8") as f:
-    html = f.read()
-with open(os.path.join("html", "style.css"), encoding="utf-8") as f:
-    html = html.replace("<style></style>", f"<style>\n{f.read()}\n</style>")
-with open(os.path.join("html", "main.js"), encoding="utf-8") as f:
-    html = html.replace("<script></script>", f"<script>\n{f.read()}\n</script>")
-html = html.replace("<!--posts-->", "\n".join(posts_html))
-html = html.replace("<!--comments-->", "\n".join(comments_html))
-with open(os.path.join(location, html_file), "w", encoding="utf-8") as f:
-    f.write(html)
-
-
+# Save overall HTML
+print("Saving HTML...")
+if page_size:
+    length = max(len(posts_html), len(comments_html))
+    page_count = (length // page_size) + 1
+    for i in range(page_count):
+        posts_on_page = posts_html[i*page_size:(i+1)*page_size]
+        comments_on_page = comments_html[i*page_size:(i+1)*page_size]
+        has_next = i < page_count - 1
+        save_html(posts_on_page, comments_on_page, location, html_file, i, has_next)
+save_html(posts_html, comments_html, location, html_file, None, False)

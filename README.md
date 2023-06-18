@@ -44,6 +44,8 @@ Each post will have its top-level comments saved, as well as each of their immed
 
 Linked media files (images, videos etc.) will be saved locally where possible, though imgur is currently not well supported in all cases.
 
+If you want to also break the resultant HTML file into multiple files (as browsers struggle to display enormous HTML files) you can add the `--page-size 100` argument (replacing 100 with whatever the posts-per page you want is).
+
 ## Use with Docker
 
 Rather than installing dependencies locally, you can use docker to create a local image and use that instead. First build the image:
