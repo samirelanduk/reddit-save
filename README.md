@@ -29,6 +29,8 @@ REDDIT_CLIENT_ID = "sadsU7-zfX"
 REDDIT_SECRET = "687DDJSS&999d-hdkjK8h"
 ```
 
+(If you have 2FA enabled, you will need to append that to the password, separated by a colon.)
+
 ## Use
 
 Create a folder that will contain your archive. Then run:
