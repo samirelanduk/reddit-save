@@ -65,3 +65,11 @@ $ docker run \
 -v /Local/location/to/save/in:/opt/app/archive \
 redditsave saved
 ```
+
+## Backing up a specific username
+
+Rather than backing up your own saved/upvoted posts and comments, you can back up the submitted posts and comments of another user:
+
+```bash
+./save.py user:samirelanduk folder_name
+```
