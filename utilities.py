@@ -23,6 +23,8 @@ PLATFORMS = ["redgifs.com", "gfycat.com", "imgur.com", "youtube.com"]
 def make_client():
     """Creates a PRAW client with the details in the secrets.py file."""
 
+    print(REDDIT_USERNAME)
+
     return praw.Reddit(
         username=REDDIT_USERNAME,
         password=REDDIT_PASSWORD,
@@ -89,6 +91,22 @@ def get_saved_comments(client):
     return [
         saved for saved in client.user.me().saved(limit=None)
         if saved.__class__.__name__ != "Submission"
+    ]
+
+
+def get_user_posts(client, username):
+    """Gets a list of posts that the user has made."""
+
+    return [
+        post for post in client.redditor(username).submissions.new(limit=None)
+    ]
+
+
+def get_user_comments(client, username):
+    """Gets a list of comments that the user has made."""
+
+    return [
+        comment for comment in client.redditor(username).comments.new(limit=None)
     ]
 
 
@@ -278,9 +296,13 @@ def get_comment_html(comment, children=True, op=None):
     return html
 
 
-def save_html(posts, comments, location, html_file, page, has_next):
-    with open(os.path.join("html", html_file), encoding="utf-8") as f:
-        html = f.read()
+def save_html(posts, comments, location, html_file, page, has_next, username=None):
+    if username:
+        with open(os.path.join("html", "username.html"), encoding="utf-8") as f:
+            html = f.read().replace("[username]", username)
+    else:
+        with open(os.path.join("html", html_file), encoding="utf-8") as f:
+            html = f.read()
     with open(os.path.join("html", "style.css"), encoding="utf-8") as f:
         html = html.replace("<style></style>", f"<style>\n{f.read()}\n</style>")
     with open(os.path.join("html", "main.js"), encoding="utf-8") as f:

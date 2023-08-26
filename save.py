@@ -7,8 +7,12 @@ from tqdm import tqdm
 from utilities import *
 
 # Get arguments
+def validate_mode(mode):
+    if mode not in ["saved", "upvoted"] and not mode.startswith("user:"):
+        raise argparse.ArgumentTypeError(f"Invalid mode: {mode}")
+    return mode
 parser = argparse.ArgumentParser(description="Save reddit posts to file.")
-parser.add_argument("mode", type=str, nargs=1, choices=["saved", "upvoted"], help="The file to convert.")
+parser.add_argument("mode", type=validate_mode, nargs=1, help="The file to convert.")
 if os.getenv("DOCKER", "0") != "1":
     parser.add_argument("location", type=str, nargs=1, help="The path to save to.")
 # Optional page size argument
@@ -30,10 +34,15 @@ if mode == "saved":
     html_file = "saved.html"
     get_posts = get_saved_posts
     get_comments = get_saved_comments
-else:
+elif mode == "upvoted":
     html_file = "upvoted.html"
     get_posts = get_upvoted_posts
     get_comments = lambda client: []
+elif mode.startswith("user:"):
+    username = mode.split(":")[-1]
+    html_file = f"{username}.html"
+    get_posts = lambda client: get_user_posts(client, username)
+    get_comments = lambda client: get_user_comments(client, username)
 
 # Make directory for media and posts
 if not os.path.exists(os.path.join(location, "media")):
@@ -85,5 +94,5 @@ if page_size:
         posts_on_page = posts_html[i*page_size:(i+1)*page_size]
         comments_on_page = comments_html[i*page_size:(i+1)*page_size]
         has_next = i < page_count - 1
-        save_html(posts_on_page, comments_on_page, location, html_file, i, has_next)
-save_html(posts_html, comments_html, location, html_file, None, False)
+        save_html(posts_on_page, comments_on_page, location, html_file, i, has_next, username=html_file.split(".")[0])
+save_html(posts_html, comments_html, location, html_file, None, False, username=html_file.split(".")[0])
