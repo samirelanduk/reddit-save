@@ -29,6 +29,8 @@ REDDIT_CLIENT_ID = "sadsU7-zfX"
 REDDIT_SECRET = "687DDJSS&999d-hdkjK8h"
 ```
 
+(If you have 2FA enabled, you will need to append that to the password, separated by a colon.)
+
 ## Use
 
 Create a folder that will contain your archive. Then run:
@@ -64,6 +66,14 @@ $ docker run \
 -e REDDIT_SECRET="687DDJSS&999d-hdkjK8h" \
 -v /Local/location/to/save/in:/opt/app/archive \
 redditsave saved
+```
+
+## Backing up a specific username
+
+Rather than backing up your own saved/upvoted posts and comments, you can back up the submitted posts and comments of another user:
+
+```bash
+./save.py user:samirelanduk folder_name
 ```
 
 ## Backing up a specific username
