@@ -135,7 +135,6 @@ def get_post_html(post):
 def save_media(post, location):
     """Takes a post object and tries to download any image/video it might be
     associated with. If it can, it will return the filename."""
-
     url = post.url
     stripped_url = url.split("?")[0]
     if url.endswith(post.permalink): return None
@@ -144,6 +143,42 @@ def save_media(post, location):
     extension = stripped_url.split(".")[-1].lower()
     domain = ".".join(post.url.split("/")[2].split(".")[-2:])
     readable_name = list(filter(bool, post.permalink.split("/")))[-1]
+
+    # Handle galleries
+    # When we saved a cross_post, we don't know if it is a gallery.
+    if hasattr(post, "gallery_data") or ("gallery" in url and hasattr(post, "crosspost_parent_list")):
+
+        if not hasattr(post, "gallery_data") and hasattr(post, "crosspost_parent_list"):
+            for crosspost in post.crosspost_parent_list:
+                if crosspost["gallery_data"] is not None:
+                    # hard hack
+                    post.gallery_data = crosspost["gallery_data"]
+                    post.media_metadata = crosspost["media_metadata"]
+                    break
+            if not hasattr(post, "gallery_data"): return None
+
+        images = [ ]
+        for item in sorted(post.gallery_data['items'], key=lambda x: x['id']):
+            media_id = item['media_id']
+            meta = post.media_metadata[media_id]
+            source = meta['s']
+            if meta['e'] == 'Image':
+                url = source['u']
+            elif meta['e'] == 'AnimatedImage':
+                url = source['gif']
+            else:
+                return None
+            stripped_url = url.split("?")[0]
+            extension = stripped_url.split(".")[-1].lower()
+            filename = f"{readable_name}_{post.id}_{media_id}.{extension}"
+            try:
+                response = requests.get(url)
+                with open(os.path.join(location, "media", filename), "wb") as f:
+                    f.write(response.content)
+                    images.append(filename)
+            except:
+                print(f"Failed to download {url}")
+        return images if len(images) > 0 else None
 
     # If it's an imgur gallery, forget it
     if domain == "imgur.com" and "gallery" in url: return None
@@ -159,7 +194,7 @@ def save_media(post, location):
         if media_type.startswith("image") or media_type.startswith("video"):
             with open(os.path.join(location, "media", filename), "wb") as f:
                 f.write(response.content)
-                return filename
+                return [ filename ]
 
     # Is this a v.redd.it link?
     if domain == "redd.it":
@@ -171,7 +206,7 @@ def save_media(post, location):
             extension = name.split(".")[-1]
             filename = f"{readable_name}_{post.id}.{extension}"
             os.rename(name, os.path.join(location, "media", filename))
-            return filename
+            return [ filename ]
         except:
             os.chdir(current)
             return None
@@ -199,7 +234,7 @@ def save_media(post, location):
                 filename = f"{readable_name}_{post.id}.{extension}"
                 with open(os.path.join(location, "media", filename), "wb") as f:
                     f.write(response.content)
-                    return filename
+                    return [ filename ]
 
     # Try to use youtube_dl if it's one of the possible domains
     if domain in PLATFORMS:
@@ -218,26 +253,23 @@ def save_media(post, location):
                 return
         for f in os.listdir(os.path.join(location, "media")):
             if f.startswith(f"{readable_name}_{post.id}"):
-                return f
+                return [ f ]
 
 
 def add_media_preview_to_html(post_html, media):
     """Takes post HTML and returns a modified version with the preview
     inserted."""
 
-    extension = media.split(".")[-1]
-    location = "/".join(["media", media])
-    if extension in IMAGE_EXTENSIONS:
-        return post_html.replace(
-            "<!--preview-->",
-            f'<img src="{location}">'
-        )
-    if extension in VIDEO_EXTENSIONS:
-        return post_html.replace(
-            "<!--preview-->",
-            f'<video controls><source src="{location}"></video>'
-        )
-    return post_html
+    media_html_list = []
+
+    for m in media:
+        extension = m.split(".")[-1]
+        location = "/".join(["media", m])
+        if extension in IMAGE_EXTENSIONS:
+            media_html_list.append(f'<img src="{location}">')
+        if extension in VIDEO_EXTENSIONS:
+            media_html_list.append(f'<video controls><source src="{location}"></video>')
+    return post_html.replace('<!--preview-->', ''.join([ f"<div class=\"preview\">{item}</div>" for item in media_html_list]))
 
 
 def create_post_page_html(post, post_html):
