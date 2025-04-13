@@ -6,7 +6,7 @@ Browsing through the stuff you've liked or saved on reddit is really enjoyable a
 
 However over time more and more of the older posts will be deleted or missing, and the historical record atrophies. Use this tool to back up those posts and comments to your computer where you can browse them offline, and where they are safe forever.
 
-reddit-save will backup saved posts, saved comments, and upvoted posts. It can't do upvoted comments because the reddit API doesn't expose them. Crucially, when it is run again on the same location it will ignore any posts/comments previously archived - once something is saved, it's saved permanently.
+reddit-save will back up saved posts, saved comments, and upvoted posts. It can't do upvoted comments because the reddit API doesn't expose them. Crucially, when it is run again on the same location it will ignore any posts/comments previously archived - once something is saved, it's saved permanently.
 
 ## Installation
 
@@ -20,7 +20,7 @@ If you get permission errors, try using `sudo` or using a virtual environment.
 
 You will need [ffmpeg](https://ffmpeg.org/) installed somewhere too.
 
-Rename the file `logindata.py.example` to `logindata.py`. You will need to add four things to this file, your reddit username and password, and a reddit client ID and secret. The latter two are obtained using [the instructions here](https://github.com/reddit-archive/reddit/wiki/OAuth2-Quick-Start-Example#first-steps). The file should look something like this:
+Rename the file `logindata.py.example` to `logindata.py`. You will need to add four things to this file: your reddit username and password, and a reddit client ID and secret. The latter two are obtained using [the instructions here](https://github.com/reddit-archive/reddit/wiki/OAuth2-Quick-Start-Example#first-steps). The file should look something like this:
 
 ```python
 REDDIT_USERNAME = "spez"
@@ -40,7 +40,7 @@ $ ./save.py saved folder_name
 $ ./save.py upvoted folder_name
 ```
 
-The first command will backup your saved posts/comments to a file called folder_name/saved.html. The second will backup your upvoted posts to a file called folder_name/upvoted.html.
+The first command will back up your saved posts/comments to a file called folder_name/saved.html. The second will back up your upvoted posts to a file called folder_name/upvoted.html.
 
 Each post will have its top-level comments saved, as well as each of their immediate child comments (but no further).
 
@@ -50,7 +50,7 @@ If you want to also break the resultant HTML file into multiple files (as browse
 
 ## Use with Docker
 
-Rather than installing dependencies locally, you can use docker to create a local image and use that instead. First build the image:
+Rather than installing dependencies locally, you can use Docker to create a local image and use that instead. First build the image:
 
 ```bash
 $ docker build -t redditsave .
@@ -66,14 +66,6 @@ $ docker run \
 -e REDDIT_SECRET="687DDJSS&999d-hdkjK8h" \
 -v /Local/location/to/save/in:/opt/app/archive \
 redditsave saved
-```
-
-## Backing up a specific username
-
-Rather than backing up your own saved/upvoted posts and comments, you can back up the submitted posts and comments of another user:
-
-```bash
-./save.py user:samirelanduk folder_name
 ```
 
 ## Backing up a specific username
