@@ -19,6 +19,14 @@ except ImportError:
 IMAGE_EXTENSIONS = ["gif", "gifv", "jpg", "jpeg", "png"]
 VIDEO_EXTENSIONS = ["mp4"]
 PLATFORMS = ["redgifs.com", "gfycat.com", "imgur.com", "youtube.com"]
+REDDIT_JSON_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/126.0.0.0 Safari/537.36"
+    ),
+    "Accept": "application/json",
+}
 
 
 def make_client():
@@ -164,19 +172,36 @@ def save_media(post, location):
 
     # Is this a reddit gallery?
     if domain == "reddit.com" and "gallery" in url:
-        json_url = url + ".json"
-        resp = requests.get(json_url)
+        # Prefer data already present on the PRAW submission object
+        media = getattr(post, "media_metadata", None)
+        if not media:
+            json_url = post.permalink.rstrip("/") + ".json?raw_json=1"
+            resp = requests.get(
+                f"https://www.reddit.com{json_url}",
+                headers=REDDIT_JSON_HEADERS,
+                timeout=15
+            )
 
-        sleep = 1
-        while resp.status_code == 429:
-            time.sleep(sleep)
-            print(f"Rate limited, sleeping for {sleep} seconds")
-            resp = requests.get(json_url)
-            sleep *= 2
+            sleep = 1
+            while resp.status_code == 429:
+                time.sleep(sleep)
+                print(f"Rate limited, sleeping for {sleep} seconds")
+                resp = requests.get(
+                    f"https://www.reddit.com{json_url}",
+                    headers=REDDIT_JSON_HEADERS,
+                    timeout=15
+                )
+                sleep *= 2
 
-        data = resp.json()
-        post_data = data[0]["data"]["children"][0]["data"]
-        media = post_data.get("media_metadata")
+            if resp.status_code == 403:
+                print("Reddit gallery JSON returned 403; skipping gallery media.")
+                return None
+            if resp.status_code != 200:
+                return None
+
+            data = resp.json()
+            post_data = data[0]["data"]["children"][0]["data"]
+            media = post_data.get("media_metadata")
         if not media: return None
         filenames = []
         for idx, data in enumerate(list(media.values()), 1):
@@ -186,7 +211,7 @@ def save_media(post, location):
                 base_url = data["s"]["u"].replace("&amp;", "&")  # unescape URL
             else:
                 continue
-            response = requests.get(base_url)
+            response = requests.get(base_url, headers=REDDIT_JSON_HEADERS, timeout=15)
             if response.status_code == 200:
                 filename = f"{readable_name}_{post.id}_{idx}.{ext}"
                 with open(os.path.join(location, "media", filename), "wb") as f:
