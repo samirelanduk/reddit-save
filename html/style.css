@@ -197,6 +197,11 @@ button:hover {
     align-items: center;
 }
 
+.preview_wrapper {
+    display: flex;
+    overflow: auto;
+}
+
 .preview.full img, .preview.full video {
     max-width: 100vw;
     max-height: 100vh;
